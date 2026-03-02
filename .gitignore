@@ -1,0 +1,49 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.fleet/
+.zed/
+
+# Root envs
+.env
+.env.*
+!.env.example
+
+# Laravel backend
+backend/api/.env
+backend/api/.env.*
+!backend/api/.env.example
+backend/api/vendor/
+backend/api/node_modules/
+backend/api/public/build/
+backend/api/public/hot
+backend/api/public/storage
+backend/api/storage/*.key
+backend/api/storage/pail/
+backend/api/bootstrap/cache/*.php
+
+# Separate frontend
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+frontend/node_modules/
+frontend/dist/
+
+# Flutter mobile
+AppMovilPollos/apppllr-main/.dart_tool/
+AppMovilPollos/apppllr-main/build/
+AppMovilPollos/apppllr-main/.flutter-plugins
+AppMovilPollos/apppllr-main/.flutter-plugins-dependencies
+AppMovilPollos/apppllr-main/.packages
+AppMovilPollos/apppllr-main/.pub-cache/
+AppMovilPollos/apppllr-main/.metadata
+AppMovilPollos/apppllr-main/android/.gradle/
+AppMovilPollos/apppllr-main/android/local.properties
+AppMovilPollos/apppllr-main/ios/Pods/
+AppMovilPollos/apppllr-main/macos/Pods/
+AppMovilPollos/apppllr-main/linux/flutter/
+AppMovilPollos/apppllr-main/windows/flutter/
+
+# Logs
+*.log
