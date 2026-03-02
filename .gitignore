@@ -33,6 +33,7 @@ frontend/dist/
 # Flutter mobile
 AppMovilPollos/apppllr-main/.dart_tool/
 AppMovilPollos/apppllr-main/build/
+AppMovilPollos/apppllr-main/node_modules/
 AppMovilPollos/apppllr-main/.flutter-plugins
 AppMovilPollos/apppllr-main/.flutter-plugins-dependencies
 AppMovilPollos/apppllr-main/.packages
