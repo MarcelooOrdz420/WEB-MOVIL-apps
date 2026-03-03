@@ -27,25 +27,25 @@ final _orders = OrdersController();
 final GoRouter _router = GoRouter(
   routes: [
 
-    // BIENVENIDA (Imagen 1)
+    // Parte externa de la app
     GoRoute(
       path: '/',
       builder: (context, state) => const MyHomePage(title: ''),
     ),
 
-    // LOGIN CORREO
+    // Loggeo de cliente
     GoRoute(
       path: '/correo',
       builder: (context, state) => const LoginCorreoPage(),
     ),
 
-    // REGISTRO
+    // Registro de cliente
     GoRoute(
       path: '/registro',
       builder: (context, state) => const RegistroPage(),
     ),
 
-    // INVITADO
+    // Visita de persona sin registro
     GoRoute(
       path: '/invitado',
       builder: (context, state) => const InvitadoPage(),
