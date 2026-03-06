@@ -9,12 +9,13 @@ class ChatBotPage extends StatefulWidget {
 }
 
 class _ChatBotPageState extends State<ChatBotPage> {
-  final List<_ChatMessage> _messages = [
-    const _ChatMessage(
+  final List<_ChatMessage> _messages = const [
+    _ChatMessage(
       role: _ChatRole.bot,
-      text: 'Hola, soy POLL-IA. Tu pollo de confianza para ayudarte con tus preguntas sobre nuestros productos, pedidos, pagos y delivery. ¿En qué puedo ayudarte hoy?',
+      text:
+          'Hola, soy POLL-IA. Te ayudo con productos, pedidos, pagos y delivery. En que te ayudo hoy?',
     ),
-  ];
+  ].toList();
 
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -23,43 +24,42 @@ class _ChatBotPageState extends State<ChatBotPage> {
     _IntentRule(
       keywords: ['producto', 'productos', 'menu', 'carta', 'pollo', 'parrilla', 'bebida'],
       answer:
-          'En el menu tenemos categorias de pollos, parrillas y bebidas. Usa la seccion principal para explorar y el buscador para encontrar un producto exacto.',
+          'En el menu tenemos categorias de pollos, parrillas y bebidas. Usa principal para explorar y el buscador para encontrar un producto exacto.',
       chips: ['Ver productos', 'Buscar pollo', 'Ver bebidas'],
     ),
     _IntentRule(
       keywords: ['pedido', 'pedidos', 'seguimiento', 'codigo', 'orden', 'ordenes'],
       answer:
-          'Para revisar tu pedido, entra a la pestaña de ordenes o a "Mis pedidos" en la web. Ahi podras ver tu codigo, estado y seguimiento.',
-      chips: ['Mis pedidos', 'Seguimiento', 'Estado de pedido'],
+          'Para revisar tu pedido, entra a la pestana de ordenes o a Mis pedidos en la web. Ahi veras codigo, estado y seguimiento.',
+      chips: ['Mis pedidos', 'Seguimiento', 'Estado del pedido'],
     ),
     _IntentRule(
       keywords: ['pago', 'pagos', 'yape', 'plin', 'transferencia', 'contraentrega', 'qr'],
       answer:
-          'Aceptamos Yape, Plin, transferencia bancaria y pago contraentrega. En la pantalla de pago veras el QR de Yape/Plin y los datos de transferencia.',
+          'Aceptamos Yape, Plin, transferencia bancaria y pago contraentrega. En pago veras QR de Yape/Plin y datos de transferencia.',
       chips: ['Yape', 'Plin', 'Transferencia'],
     ),
     _IntentRule(
       keywords: ['delivery', 'envio', 'envios', 'direccion', 'ubicacion', 'reparto'],
       answer:
-          'Tenemos delivery y recojo en local. Si eliges delivery, completa tu direccion y referencia para que el pedido llegue con precision.',
+          'Tenemos delivery y recojo en local. Si eliges delivery, completa direccion y referencia para que llegue con precision.',
       chips: ['Delivery', 'Recojo', 'Ubicacion'],
     ),
     _IntentRule(
       keywords: ['horario', 'hora', 'atienden', 'abren', 'cierran'],
       answer:
-          'Atendemos todos los dias de 11:00 a. m. a 10:00 p. m. Si necesitas un pedido grande, te conviene hacerlo con anticipacion.',
+          'Atendemos todos los dias de 11:00 a. m. a 10:00 p. m. Para pedidos grandes, mejor hazlo con anticipacion.',
       chips: ['Horario', 'Pedidos grandes'],
     ),
     _IntentRule(
       keywords: ['contacto', 'telefono', 'llamar', 'numero', 'soporte'],
       answer:
-          'Puedes contactarnos por telefono y tambien desde la app. Para pagos por Yape o Plin, revisa los numeros de la empresa en la pantalla de pago.',
+          'Puedes contactarnos por telefono y desde la app. Para pagos por Yape o Plin revisa los numeros de la empresa en la pantalla de pago.',
       chips: ['Telefono', 'Pago'],
     ),
     _IntentRule(
       keywords: ['hola', 'buenas', 'buenos dias', 'buenas tardes', 'buenas noches'],
-      answer:
-          'Hola. Dime si necesitas ayuda con productos, pedidos, pagos o delivery.',
+      answer: 'Hola. Dime si necesitas ayuda con productos, pedidos, pagos o delivery.',
       chips: ['Productos', 'Pedidos', 'Pagos'],
     ),
   ];
@@ -93,14 +93,9 @@ class _ChatBotPageState extends State<ChatBotPage> {
 
   _ChatMessage _buildReply(String text) {
     final normalized = text.toLowerCase().trim();
-
     for (final rule in _rules) {
       if (rule.matches(normalized)) {
-        return _ChatMessage(
-          role: _ChatRole.bot,
-          text: rule.answer,
-          suggestions: rule.chips,
-        );
+        return _ChatMessage(role: _ChatRole.bot, text: rule.answer, suggestions: rule.chips);
       }
     }
 
@@ -150,23 +145,17 @@ class _ChatBotPageState extends State<ChatBotPage> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     padding: const EdgeInsets.all(12),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.82,
-                    ),
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
                     decoration: BoxDecoration(
                       color: isUser ? Colors.orange : Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Column(
-                      crossAxisAlignment:
-                          isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                       children: [
                         Text(
                           msg.text,
-                          style: TextStyle(
-                            color: isUser ? Colors.white : Colors.black87,
-                            height: 1.35,
-                          ),
+                          style: TextStyle(color: isUser ? Colors.white : Colors.black87, height: 1.35),
                         ),
                         if (!isUser && msg.suggestions.isNotEmpty) ...[
                           const SizedBox(height: 10),
@@ -202,9 +191,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
                       onSubmitted: (_) => _sendText(),
                       decoration: InputDecoration(
                         hintText: 'Escribe tu mensaje...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ),

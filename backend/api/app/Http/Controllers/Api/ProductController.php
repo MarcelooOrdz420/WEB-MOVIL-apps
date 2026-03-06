@@ -9,6 +9,16 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    public function adminIndex(): JsonResponse
+    {
+        $products = Product::query()
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($products);
+    }
+
     public function index(): JsonResponse
     {
         $products = Product::query()
@@ -32,9 +42,11 @@ class ProductController extends Controller
             'category' => ['required', 'string', 'max:60'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
+            'stock' => ['sometimes', 'integer', 'min:0'],
             'image_url' => ['nullable', 'string', 'max:500'],
             'is_available' => ['sometimes', 'boolean'],
         ]);
+        $data['stock'] = (int) ($data['stock'] ?? 0);
 
         $product = Product::create($data);
 
@@ -48,6 +60,7 @@ class ProductController extends Controller
             'category' => ['sometimes', 'string', 'max:60'],
             'description' => ['nullable', 'string'],
             'price' => ['sometimes', 'numeric', 'min:0'],
+            'stock' => ['sometimes', 'integer', 'min:0'],
             'image_url' => ['nullable', 'string', 'max:500'],
             'is_available' => ['sometimes', 'boolean'],
         ]);

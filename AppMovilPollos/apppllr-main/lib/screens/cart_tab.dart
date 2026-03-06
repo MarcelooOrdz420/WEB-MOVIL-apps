@@ -33,7 +33,7 @@ class _CartTabState extends State<CartTab> {
           if (cart.items.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 50),
-              child: Center(child: Text('Tu carrito está vacío')),
+              child: Center(child: Text('Tu carrito esta vacio')),
             ),
 
           ...cart.items.map((it) {
@@ -76,7 +76,7 @@ class _CartTabState extends State<CartTab> {
                         const Spacer(),
                         TextButton(
                           onPressed: () => cart.delete(it.producto.id),
-                          child: const Text('Remove', style: TextStyle(color: Colors.red)),
+                          child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
                         )
                       ],
                     ),
@@ -88,10 +88,10 @@ class _CartTabState extends State<CartTab> {
 
           if (cart.items.isNotEmpty) ...[
             const SizedBox(height: 16),
-            const Text('Order Summary', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Resumen de orden', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             _row('Precio productos', subtotal),
-            _row('Delivery (Gratis Mayor a 70.00)', deliveryFee),
+            _row('Delivery (gratis mayor a 70.00)', deliveryFee),
             const Divider(),
             _row('Total', total, bold: true, valueColor: Colors.red),
 
@@ -138,7 +138,7 @@ class _CartTabState extends State<CartTab> {
             ),
 
             const SizedBox(height: 12),
-            const Text('Hora de entrega ?', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Hora de entrega', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Row(
               children: [
@@ -163,7 +163,7 @@ class _CartTabState extends State<CartTab> {
                         Icon(!_now ? Icons.radio_button_checked : Icons.radio_button_off,
                             size: 18, color: Colors.orange),
                         const SizedBox(width: 6),
-                        const Text('Programar el tiempo'),
+                        const Text('Programar horario'),
                       ],
                     ),
                   ),
@@ -189,7 +189,7 @@ class _CartTabState extends State<CartTab> {
                   context.push('/pago');
                 },
                 child: Text(
-                  'Proceder al pago (${cart.items.length} Ordenes)',
+                  'Proceder al pago (${cart.items.length} productos)',
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
@@ -229,3 +229,5 @@ class _CartTabState extends State<CartTab> {
     );
   }
 }
+
+

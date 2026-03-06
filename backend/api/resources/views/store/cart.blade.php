@@ -96,6 +96,9 @@
                         <option value="pickup">Recojo en local</option>
                         <option value="delivery">Delivery</option>
                     </select>
+                    <div id="etaBox" style="margin:8px 0 2px; font-size:13px; color:#7f4319;">
+                        Tiempo estimado: 15 a 25 min (recojo)
+                    </div>
 
                     <div class="checkout-grid">
                         <div>
@@ -139,6 +142,13 @@
                 <button id="geoBtn" type="button" class="dark-btn">
                     Usar mi ubicacion exacta
                 </button>
+
+                <div class="checkout-card">
+                    <label style="display:flex; gap:8px; align-items:flex-start; font-size:13px; color:#5b2a0b;">
+                        <input type="checkbox" name="accept_terms" style="margin-top:2px;">
+                        <span>Acepto los terminos de compra y autorizo el procesamiento de mis datos para gestionar el pedido.</span>
+                    </label>
+                </div>
 
                 <div class="checkout-card">
                     <h4>Pasarela de pago</h4>
@@ -201,6 +211,7 @@ const payOptions = document.getElementById('payOptions');
 const paymentInfo = document.getElementById('paymentInfo');
 const saladWrap = document.getElementById('saladWrap');
 const lastOrderBox = document.getElementById('lastOrderBox');
+const etaBox = document.getElementById('etaBox');
 const processingOverlay = document.getElementById('processingOverlay');
 const processingTitle = document.getElementById('processingTitle');
 const processingText = document.getElementById('processingText');
@@ -275,6 +286,13 @@ function paymentMethod() {
     return checked ? checked.value : 'yape';
 }
 
+function updateEta() {
+    const type = orderForm.delivery_type.value;
+    etaBox.textContent = type === 'delivery'
+        ? 'Tiempo estimado: 35 a 55 min (delivery)'
+        : 'Tiempo estimado: 15 a 25 min (recojo)';
+}
+
 function updatePaymentInfo() {
     const method = paymentMethod();
     payOptions.querySelectorAll('.pay-option').forEach(option => {
@@ -331,6 +349,7 @@ geoBtn.addEventListener('click', () => {
 orderForm.querySelectorAll('input[name="payment_method"]').forEach(radio => {
     radio.addEventListener('change', updatePaymentInfo);
 });
+orderForm.delivery_type.addEventListener('change', updateEta);
 
 orderForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -343,6 +362,10 @@ orderForm.addEventListener('submit', async (e) => {
     const cart = getCart();
     if (!cart.length) {
         orderMsg.textContent = 'Tu carrito esta vacio.';
+        return;
+    }
+    if (!orderForm.accept_terms.checked) {
+        orderMsg.textContent = 'Debes aceptar los terminos de compra para continuar.';
         return;
     }
 
@@ -396,6 +419,7 @@ orderForm.addEventListener('submit', async (e) => {
 
 renderCart();
 updatePaymentInfo();
+updateEta();
 showLastOrder();
 </script>
 @endsection

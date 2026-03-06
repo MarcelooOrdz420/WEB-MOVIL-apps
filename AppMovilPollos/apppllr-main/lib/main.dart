@@ -54,7 +54,10 @@ final GoRouter _router = GoRouter(
     // APP PRINCIPAL (Bottom Navigation)
     GoRoute(
       path: '/app',
-      builder: (context, state) => const AppShell(),
+      builder: (context, state) {
+        final tab = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+        return AppShell(initialIndex: tab);
+      },
     ),
 
     // BUSCAR
@@ -81,7 +84,11 @@ final GoRouter _router = GoRouter(
     // CONFIRMACION
     GoRoute(
       path: '/confirmacion',
-      builder: (context, state) => const OrderConfirmedPage(),
+      builder: (context, state) {
+        final extra = state.extra;
+        final order = extra is Map<String, dynamic> ? extra : null;
+        return OrderConfirmedPage(serverOrder: order);
+      },
     ),
 
     // CHATBOT

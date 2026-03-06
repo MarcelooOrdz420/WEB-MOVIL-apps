@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 
@@ -19,7 +19,6 @@ class _RegistroPageState extends State<RegistroPage> {
   bool _obscure = true;
 
   bool _isEmailValid(String email) {
-    // validaciÃ³n simple y suficiente
     final r = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
     return r.hasMatch(email);
   }
@@ -37,28 +36,27 @@ class _RegistroPageState extends State<RegistroPage> {
 
     if (email.isEmpty || pass.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa correo y contraseÃ±a')),
+        const SnackBar(content: Text('Completa correo y contrasena')),
       );
       return;
     }
 
     if (!_isEmailValid(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Correo invÃ¡lido')),
+        const SnackBar(content: Text('Correo invalido')),
       );
       return;
     }
 
     if (pass.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La contraseÃ±a debe tener mÃ­nimo 6 caracteres')),
+        const SnackBar(content: Text('La contrasena debe tener minimo 6 caracteres')),
       );
       return;
     }
 
     setState(() => _loading = true);
     try {
-      // âœ… registrar
       await AuthService().register(
         email: email,
         password: pass,
@@ -66,7 +64,6 @@ class _RegistroPageState extends State<RegistroPage> {
         phone: _phoneController.text.trim(),
       );
 
-      // âœ… auto-login para guardar token
       await AuthService().login(email: email, password: pass);
 
       if (!mounted) return;
@@ -97,7 +94,7 @@ class _RegistroPageState extends State<RegistroPage> {
         title: const Text('Registro'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: _loading ? null : () => context.go("/"),
+          onPressed: _loading ? null : () => context.go('/'),
         ),
       ),
       body: SingleChildScrollView(
@@ -115,7 +112,6 @@ class _RegistroPageState extends State<RegistroPage> {
               enabled: !_loading,
             ),
             const SizedBox(height: 12),
-
             TextField(
               controller: _phoneController,
               textInputAction: TextInputAction.next,
@@ -126,39 +122,33 @@ class _RegistroPageState extends State<RegistroPage> {
               enabled: !_loading,
             ),
             const SizedBox(height: 12),
-
             TextField(
               controller: _correoController,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
-                labelText: 'Correo electrÃ³nico',
+                labelText: 'Correo electronico',
                 prefixIcon: Icon(Icons.email),
               ),
               enabled: !_loading,
             ),
             const SizedBox(height: 12),
-
             TextField(
               controller: _passwordController,
               obscureText: _obscure,
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _loading ? null : _doRegister(),
               decoration: InputDecoration(
-                labelText: 'ContraseÃ±a (mÃ­n. 6)',
+                labelText: 'Contrasena (min. 6)',
                 prefixIcon: const Icon(Icons.lock),
                 suffixIcon: IconButton(
-                  onPressed: _loading
-                      ? null
-                      : () => setState(() => _obscure = !_obscure),
+                  onPressed: _loading ? null : () => setState(() => _obscure = !_obscure),
                   icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
                 ),
               ),
               enabled: !_loading,
             ),
-
             const SizedBox(height: 20),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -172,7 +162,6 @@ class _RegistroPageState extends State<RegistroPage> {
                     : const Text('Registrarme'),
               ),
             ),
-
             const SizedBox(height: 12),
             TextButton(
               onPressed: _loading ? null : () => context.go('/correo'),
@@ -184,4 +173,3 @@ class _RegistroPageState extends State<RegistroPage> {
     );
   }
 }
-

@@ -48,7 +48,10 @@ class Producto {
   }
 
   bool get isNetworkImage =>
-      image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/');
+      image.startsWith('http://') ||
+      image.startsWith('https://') ||
+      image.startsWith('/') ||
+      image.startsWith('images/');
 
   String get resolvedImage =>
       isNetworkImage ? ApiConfig.resolveUrl(image) : 'assets/$image';

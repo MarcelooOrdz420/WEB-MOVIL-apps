@@ -27,6 +27,8 @@
             font-family: "Trebuchet MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             background: radial-gradient(circle at top, #2a180d 0%, #121213 38%, #0f0f10 100%);
             color: #fff;
+            min-height: 100vh;
+            background-attachment: fixed;
         }
 
         .topbar {
@@ -36,6 +38,7 @@
             background: rgba(13, 13, 14, 0.95);
             border-bottom: 1px solid var(--line);
             backdrop-filter: blur(6px);
+            box-shadow: 0 10px 24px rgba(0,0,0,.18);
         }
 
         .container { max-width: 1150px; margin: 0 auto; padding: 0 16px; }
@@ -83,6 +86,7 @@
         .left-nav a:hover {
             border-color: var(--orange-soft);
             transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(255,111,31,.2);
         }
 
         .right-tools {
@@ -153,6 +157,17 @@
             color: var(--text-dark);
             min-height: calc(100vh - 72px);
             padding: 24px 0 30px;
+            position: relative;
+        }
+
+        main.page::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 6% 10%, rgba(255, 126, 40, .08), transparent 28%),
+                radial-gradient(circle at 92% 6%, rgba(255, 180, 120, .12), transparent 28%);
         }
 
         .panel {
@@ -162,6 +177,14 @@
             padding: 14px;
             margin-bottom: 12px;
             box-shadow: var(--shadow-soft);
+            position: relative;
+            z-index: 1;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 30px rgba(30, 12, 3, .10);
         }
 
         img {

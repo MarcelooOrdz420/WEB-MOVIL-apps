@@ -29,6 +29,9 @@ class ApiAuthMiddleware
         if (! $user) {
             return response()->json(['message' => 'Usuario no encontrado.'], 401);
         }
+        if (! $user->is_active) {
+            return response()->json(['message' => 'Cuenta desactivada.'], 401);
+        }
 
         auth()->setUser($user);
 

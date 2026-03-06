@@ -19,6 +19,15 @@ class _OrdersTabState extends State<OrdersTab> {
     _future = _loadOrders();
   }
 
+  String _formatDate(dynamic raw) {
+    final value = (raw ?? '').toString().trim();
+    if (value.isEmpty) return '-';
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return value;
+    return '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')}/${parsed.year} '
+        '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
+  }
+
   Future<List<Map<String, dynamic>>> _loadOrders() async {
     final logged = await SessionService().isLoggedIn();
     if (!logged) return <Map<String, dynamic>>[];
@@ -93,7 +102,7 @@ class _OrdersTabState extends State<OrdersTab> {
             ),
             const SizedBox(height: 6),
             Text('Estado: ${o['status'] ?? '-'}'),
-            Text('Fecha: ${(o['created_at'] ?? '').toString().replaceFirst('T', ' ').substring(0, ((o['created_at'] ?? '').toString().length > 16) ? 16 : (o['created_at'] ?? '').toString().length)}'),
+            Text('Fecha: ${_formatDate(o['created_at'])}'),
             if (items.isNotEmpty) Text('Items: $items'),
             const SizedBox(height: 8),
             Text(

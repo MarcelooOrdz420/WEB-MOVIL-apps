@@ -54,6 +54,22 @@
                 <label for="maxPriceInput" class="label-main">Precio maximo (S/)</label>
                 <input id="maxPriceInput" type="number" step="0.10" min="0" class="input-main" placeholder="Ej: 40.00">
             </div>
+            <div>
+                <label for="sortInput" class="label-main">Ordenar por</label>
+                <select id="sortInput" class="select-main">
+                    <option value="relevance">Relevancia</option>
+                    <option value="price_asc">Precio: menor a mayor</option>
+                    <option value="price_desc">Precio: mayor a menor</option>
+                    <option value="name_asc">Nombre: A-Z</option>
+                </select>
+            </div>
+        </div>
+        <div id="quickFilters" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+            <button type="button" class="btn-soft" data-quick="promo">Promos del dia</button>
+            <button type="button" class="btn-soft" data-quick="family">Familiares</button>
+            <button type="button" class="btn-soft" data-quick="personal">Personales</button>
+            <button type="button" class="btn-soft" data-quick="cold">Bebidas heladas</button>
+            <button type="button" class="btn-soft" data-quick="clear">Limpiar filtros</button>
         </div>
         <p id="filterInfo" class="muted-main filter-info">Escribe en el buscador para ver resultados.</p>
         <div id="searchState" class="search-state" style="display:none;">
@@ -97,6 +113,8 @@
             box-shadow: 0 16px 34px rgba(72, 27, 0, .10);
             background: #1a1a1a;
             isolation: isolate;
+            transform: translateZ(0);
+            transition: transform .35s ease, box-shadow .35s ease;
         }
         .hero-card::after {
             content: "";
@@ -120,12 +138,30 @@
             transform: scale(1.08);
             filter: saturate(1.08) contrast(1.05);
         }
+        .hero-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 36px rgba(72, 27, 0, .15);
+        }
         .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, .68), rgba(0, 0, 0, .12)); }
         .hero-copy { position: absolute; left: 16px; right: 16px; bottom: 14px; color: #fff; z-index: 2; }
         .hero-copy h2 { margin: 0; font-size: 24px; line-height: 1.05; }
         .hero-copy p { margin: 6px 0 0; font-size: 13px; opacity: .94; max-width: 240px; }
 
-        .filter-info { margin-top: 10px; }
+        #quickFilters .btn-soft {
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 12px;
+            letter-spacing: .2px;
+            background: linear-gradient(180deg, #fff5ea 0%, #ffeede 100%);
+        }
+        #quickFilters .btn-soft:hover {
+            background: linear-gradient(180deg, #ffe7d0 0%, #ffd9bb 100%);
+        }
+        .filter-info {
+            margin-top: 10px;
+            font-weight: 700;
+            color: #8c3d05;
+        }
         .search-state {
             display: flex;
             align-items: center;
@@ -147,20 +183,41 @@
 
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 14px;
+            align-items: stretch;
         }
 
-        .product-name { margin: 0; color: #27160c; font-size: 19px; }
-        .product-category { margin: 0; font-size: 12px; text-transform: capitalize; }
+        .product-name { margin: 0; color: #27160c; font-size: 18px; line-height: 1.2; }
+        .product-category {
+            margin: 0;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            display: inline-flex;
+            width: fit-content;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid #ffcfa9;
+            background: #fff5ea;
+            color: #8a3e08;
+        }
         .product-price { font-weight: 900; color: #c35300; font-size: 24px; }
-        .product-actions { display: flex; gap: 8px; }
+        .product-actions { display: flex; gap: 8px; margin-top: auto; }
         .product-card {
             position: relative;
             overflow: hidden;
             background:
                 radial-gradient(circle at top right, rgba(255,111,31,.12), transparent 30%),
                 linear-gradient(180deg, #fff 0%, #fff8f1 100%);
+            border: 1px solid #ffd2ad;
+            border-radius: 18px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-height: 360px;
+            box-shadow: 0 14px 26px rgba(60, 20, 0, .08);
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
         }
         .product-card::before {
             content: "";
@@ -169,10 +226,27 @@
             background: linear-gradient(135deg, rgba(255,157,90,.10), transparent 44%);
             pointer-events: none;
         }
+        .product-card::after {
+            content: "";
+            position: absolute;
+            right: -36px;
+            top: -36px;
+            width: 110px;
+            height: 110px;
+            background: radial-gradient(circle, rgba(255,111,31,.16), transparent 66%);
+        }
         .product-card > * { position: relative; z-index: 1; }
-        .product-image { transition: transform .35s ease; }
+        .product-image {
+            transition: transform .35s ease;
+            border-radius: 14px;
+            border: 1px solid #ffd9bd;
+        }
         .product-card:hover .product-image { transform: scale(1.08); }
-        .product-card:hover { transform: translateY(-3px); }
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 34px rgba(60, 20, 0, .12);
+            border-color: #ffbc89;
+        }
         .product-name,
         .product-price,
         .product-category {
@@ -190,6 +264,12 @@
         }
         .product-actions button:hover {
             transform: translateY(-2px);
+        }
+        .product-actions .btn-main[disabled] {
+            opacity: .65;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .modal-wrap {
@@ -234,6 +314,7 @@
             .hero-card,
             .hero-image { min-height: 190px; }
             .hero-copy h2 { font-size: 21px; }
+            .products-grid { grid-template-columns: 1fr; }
         }
     </style>
 @endsection
@@ -255,6 +336,8 @@ const productsGrid = document.getElementById('productsGrid');
 const searchInput = document.getElementById('searchInput');
 const categoryInput = document.getElementById('categoryInput');
 const maxPriceInput = document.getElementById('maxPriceInput');
+const sortInput = document.getElementById('sortInput');
+const quickFilters = document.getElementById('quickFilters');
 const filterInfo = document.getElementById('filterInfo');
 const modal = document.getElementById('productModal');
 const searchState = document.getElementById('searchState');
@@ -320,7 +403,9 @@ function nextSlide() {
 }
 
 function showProduct(product) {
-    document.getElementById('modalImage').src = product.image_url || '/images/products/default.svg';
+    const modalImage = document.getElementById('modalImage');
+    modalImage.onerror = () => { modalImage.src = '/images/products/default.svg'; };
+    modalImage.src = product.image_url || '/images/products/default.svg';
     document.getElementById('modalName').textContent = product.name;
     document.getElementById('modalDesc').textContent = product.description || 'Sin descripcion.';
     document.getElementById('modalPrice').textContent = `Precio: S/ ${money(product.price)}`;
@@ -332,14 +417,26 @@ function addToCart(product) {
         window.location.href = '/login';
         return;
     }
+    const stock = Number(product.stock || 0);
+    if (stock <= 0) {
+        alert('Producto agotado por ahora.');
+        return;
+    }
     const cart = getCart();
     const existing = cart.find(item => item.id === product.id);
-    if (existing) existing.qty += 1;
+    if (existing) {
+        if (existing.qty >= stock) {
+            alert(`Solo hay ${stock} unidades disponibles en stock.`);
+            return;
+        }
+        existing.qty += 1;
+    }
     else cart.push({
         id: product.id,
         name: product.name,
         category: product.category || '',
         price: Number(product.price),
+        stock,
         qty: 1
     });
     setCart(cart);
@@ -349,15 +446,22 @@ function filteredProducts() {
     const query = searchInput.value.trim().toLowerCase();
     const category = categoryInput.value.trim().toLowerCase();
     const maxPrice = maxPriceInput.value ? Number(maxPriceInput.value) : null;
+    const sortMode = sortInput.value;
 
     if (!query && !category && maxPrice === null) return [];
 
-    return state.products.filter(product => {
+    const base = state.products.filter(product => {
         const byName = !query || product.name.toLowerCase().includes(query);
         const byCategory = !category || String(product.category || '').toLowerCase() === category;
         const byPrice = maxPrice === null || Number(product.price) <= maxPrice;
         return byName && byCategory && byPrice;
     });
+
+    if (sortMode === 'price_asc') base.sort((a, b) => Number(a.price) - Number(b.price));
+    if (sortMode === 'price_desc') base.sort((a, b) => Number(b.price) - Number(a.price));
+    if (sortMode === 'name_asc') base.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+
+    return base;
 }
 
 function renderProducts() {
@@ -378,14 +482,17 @@ function renderProducts() {
     productsGrid.innerHTML = list.map(product => `
         <article class="product-card">
             <div class="product-image-wrap">
-                <img src="${product.image_url || '/images/products/default.svg'}" alt="${product.name}" class="product-image">
+                <img src="${product.image_url || '/images/products/default.svg'}" alt="${product.name}" class="product-image" onerror="this.onerror=null;this.src='/images/products/default.svg';">
             </div>
             <h3 class="product-name">${product.name}</h3>
             <p class="muted-main product-category">${product.category || 'general'}</p>
+            <p class="muted-main">Stock: ${Number(product.stock || 0)}</p>
             <div class="product-price">S/ ${money(product.price)}</div>
             <div class="product-actions">
                 <button type="button" data-inspect="${product.id}" class="btn-soft">Inspeccionar</button>
-                <button type="button" data-buy="${product.id}" class="btn-main">Agregar</button>
+                <button type="button" data-buy="${product.id}" class="btn-main" ${Number(product.stock || 0) <= 0 ? 'disabled' : ''}>
+                    ${Number(product.stock || 0) <= 0 ? 'Agotado' : 'Agregar'}
+                </button>
             </div>
         </article>
     `).join('');
@@ -424,6 +531,37 @@ setInterval(nextSlide, 3500);
 searchInput.addEventListener('input', queueRenderProducts);
 categoryInput.addEventListener('change', queueRenderProducts);
 maxPriceInput.addEventListener('input', queueRenderProducts);
+sortInput.addEventListener('change', queueRenderProducts);
+quickFilters.querySelectorAll('[data-quick]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-quick');
+        if (mode === 'clear') {
+            searchInput.value = '';
+            categoryInput.value = '';
+            maxPriceInput.value = '';
+            sortInput.value = 'relevance';
+            queueRenderProducts();
+            return;
+        }
+        if (mode === 'promo') {
+            maxPriceInput.value = '25';
+            sortInput.value = 'price_asc';
+        }
+        if (mode === 'family') {
+            categoryInput.value = 'pollos';
+            searchInput.value = 'familiar';
+        }
+        if (mode === 'personal') {
+            categoryInput.value = 'pollos';
+            searchInput.value = '1/4';
+        }
+        if (mode === 'cold') {
+            categoryInput.value = 'bebidas';
+            searchInput.value = '';
+        }
+        queueRenderProducts();
+    });
+});
 document.getElementById('closeModalBtn').addEventListener('click', () => { modal.style.display = 'none'; });
 modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
 

@@ -157,6 +157,32 @@
         .muted { font-size: 12px; opacity: .78; color: #6e4329; }
         .msg { font-size: 13px; min-height: 20px; }
         .dashboard-grid { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .admin-tools-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .alert-box {
+            border: 1px solid #ffd2b4;
+            background: linear-gradient(180deg, #fff7ef 0%, #fff1e5 100%);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        .alert-list { display: grid; gap: 8px; margin-top: 8px; }
+        .alert-item {
+            border: 1px solid #ffc08f;
+            border-radius: 10px;
+            background: #fff;
+            padding: 8px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .critical { color: #b12400; font-weight: 800; }
+        .low { color: #9a4a00; font-weight: 700; }
+        .settings-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+            align-items: end;
+        }
         .chart-card {
             position: relative;
             overflow: hidden;
@@ -212,6 +238,7 @@
         @media (max-width: 980px) {
             .layout { grid-template-columns: 1fr; }
             .dashboard-grid { grid-template-columns: 1fr; }
+            .admin-tools-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -260,6 +287,33 @@
                     <div class="muted">Aun sin datos.</div>
                 </div>
             </div>
+            <div class="admin-tools-grid">
+                <article class="alert-box">
+                    <h3 style="margin:0;">Alerta de inventario</h3>
+                    <p class="muted">Productos cercanos a agotarse. Se actualiza automaticamente.</p>
+                    <div id="lowStockList" class="alert-list">
+                        <div class="muted">Sin datos de inventario.</div>
+                    </div>
+                </article>
+                <article class="alert-box">
+                    <h3 style="margin:0;">Configuracion del panel</h3>
+                    <p class="muted">Ajusta umbral de alerta y refresco automatico.</p>
+                    <div class="settings-row">
+                        <div>
+                            <label>Alerta de bajo stock (<=)</label>
+                            <input id="stockThresholdInput" type="number" min="0" step="1" value="10">
+                        </div>
+                        <div>
+                            <label>Refresco automatico (seg)</label>
+                            <input id="refreshSecondsInput" type="number" min="10" step="5" value="20">
+                        </div>
+                        <div>
+                            <button id="saveAdminSettingsBtn" class="btn-main">Guardar configuracion</button>
+                        </div>
+                    </div>
+                    <div id="settingsMsg" class="msg"></div>
+                </article>
+            </div>
         </section>
 
         <section class="panel">
@@ -274,6 +328,10 @@
                     <div>
                         <label>Precio (S/)</label>
                         <input name="price" type="number" min="0" step="0.10" required>
+                    </div>
+                    <div>
+                        <label>Stock disponible</label>
+                        <input name="stock" type="number" min="0" step="1" value="0" required>
                     </div>
                 </div>
                 <div class="row">
@@ -423,9 +481,15 @@ const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 const exportCsvBtn = document.getElementById('exportCsvBtn');
 const usersList = document.getElementById('usersList');
 const salesDashboard = document.getElementById('salesDashboard');
+const lowStockList = document.getElementById('lowStockList');
+const stockThresholdInput = document.getElementById('stockThresholdInput');
+const refreshSecondsInput = document.getElementById('refreshSecondsInput');
+const saveAdminSettingsBtn = document.getElementById('saveAdminSettingsBtn');
+const settingsMsg = document.getElementById('settingsMsg');
 
 const BASE_CATEGORIES = ['pollos', 'parrillas', 'bebidas'];
 const ADMIN_TIMEOUT_MS = 30 * 60 * 1000;
+const ADMIN_SETTINGS_KEY = 'ed_admin_settings';
 let productsCache = [];
 let refreshTimer = null;
 
@@ -488,9 +552,78 @@ function money(value) {
     return `S/ ${Number(value || 0).toFixed(2)}`;
 }
 
+async function parseResponse(res) {
+    const raw = await res.text();
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return { message: raw ? raw.slice(0, 220) : 'Respuesta no JSON del servidor.' };
+    }
+}
+
 function canUseAdmin() {
     const user = getUser();
     return Boolean(user && user.role === 'admin' && getToken());
+}
+
+function getAdminSettings() {
+    const defaults = { stockThreshold: 10, refreshSeconds: 20 };
+    const raw = localStorage.getItem(ADMIN_SETTINGS_KEY);
+    if (!raw) return defaults;
+    try {
+        const parsed = JSON.parse(raw);
+        return {
+            stockThreshold: Number(parsed.stockThreshold ?? defaults.stockThreshold),
+            refreshSeconds: Number(parsed.refreshSeconds ?? defaults.refreshSeconds),
+        };
+    } catch {
+        return defaults;
+    }
+}
+
+function saveAdminSettings() {
+    const stockThreshold = Math.max(0, Number(stockThresholdInput.value || 0));
+    const refreshSeconds = Math.max(10, Number(refreshSecondsInput.value || 20));
+    const settings = { stockThreshold, refreshSeconds };
+    localStorage.setItem(ADMIN_SETTINGS_KEY, JSON.stringify(settings));
+    settingsMsg.textContent = `Configuracion guardada. Alerta <= ${stockThreshold} y refresco cada ${refreshSeconds}s`;
+    startAutoRefresh();
+    renderLowStockAlerts();
+}
+
+function applyAdminSettingsToForm() {
+    const settings = getAdminSettings();
+    stockThresholdInput.value = String(settings.stockThreshold);
+    refreshSecondsInput.value = String(settings.refreshSeconds);
+}
+
+function renderLowStockAlerts() {
+    if (!lowStockList) return;
+    const settings = getAdminSettings();
+    const threshold = Number(settings.stockThreshold || 0);
+    const risky = productsCache
+        .filter(product => Number(product.stock || 0) <= threshold)
+        .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0));
+
+    if (!risky.length) {
+        lowStockList.innerHTML = '<div class="muted">Todo el inventario esta por encima del umbral.</div>';
+        return;
+    }
+
+    lowStockList.innerHTML = risky.map(product => {
+        const stock = Number(product.stock || 0);
+        const levelClass = stock <= 0 ? 'critical' : 'low';
+        const levelText = stock <= 0 ? 'agotado' : 'bajo stock';
+        return `
+            <article class="alert-item">
+                <div>
+                    <strong>${product.name}</strong>
+                    <div class="muted">${product.category || 'general'} | ${levelText}</div>
+                </div>
+                <div class="${levelClass}">Stock: ${stock}</div>
+            </article>
+        `;
+    }).join('');
 }
 
 function upsertCategoryOptions() {
@@ -523,9 +656,10 @@ function productCard(product) {
                 <strong>${product.name}</strong>
                 <span class="tag">${product.category || 'general'}</span>
             </div>
-            <img src="${image}" alt="${product.name}" class="img-thumb">
+            <img src="${image}" alt="${product.name}" class="img-thumb" onerror="this.onerror=null;this.src='/images/products/default.svg';">
             <div class="muted">${product.description || 'Sin descripcion'}</div>
             <div style="margin-top:6px; font-weight:800;">S/ ${Number(product.price).toFixed(2)}</div>
+            <div class="muted">Stock: ${Number(product.stock || 0)}</div>
             <div class="muted">ID: ${product.id}</div>
             <div style="display:flex; gap:8px; margin-top:8px;">
                 <button data-edit="${product.id}">Editar</button>
@@ -613,11 +747,20 @@ function renderDashboard(orders) {
 }
 
 async function fetchProducts() {
-    const res = await fetch('/api/v1/products');
-    const data = await res.json();
+    const token = getToken();
+    const res = await fetch('/api/v1/admin/products', {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const data = await parseResponse(res);
+    if (!res.ok) {
+        productsCache = [];
+        productsList.innerHTML = `<div class="card">No se pudieron cargar productos: ${data.message || 'sin detalle'}</div>`;
+        return;
+    }
     productsCache = Array.isArray(data) ? data : [];
     upsertCategoryOptions();
     renderProducts();
+    renderLowStockAlerts();
 }
 
 function renderProducts() {
@@ -641,6 +784,7 @@ function editProduct(productId) {
     productForm.product_id.value = product.id;
     productForm.name.value = product.name || '';
     productForm.price.value = product.price || '';
+    productForm.stock.value = Number(product.stock || 0);
     productForm.description.value = product.description || '';
     productForm.image_url.value = product.image_url || '';
     productForm.is_available.checked = Boolean(product.is_available);
@@ -655,7 +799,7 @@ async function deleteProduct(productId) {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
     });
-    const data = await res.json();
+    const data = await parseResponse(res);
     if (!res.ok) {
         productMsg.textContent = data.message || 'No se pudo eliminar';
         return;
@@ -675,12 +819,19 @@ async function saveProduct(e) {
         return;
     }
 
+    const stockParsed = Number(productForm.stock.value);
+    if (!Number.isFinite(stockParsed) || stockParsed < 0) {
+        productMsg.textContent = 'Ingresa un stock valido (0 o mayor).';
+        return;
+    }
+
     const payload = {
         name: productForm.name.value.trim(),
         price: Number(productForm.price.value),
         category,
         description: productForm.description.value.trim() || null,
         image_url: productForm.image_url.value.trim() || null,
+        stock: Math.round(stockParsed),
         is_available: productForm.is_available.checked,
     };
 
@@ -696,9 +847,10 @@ async function saveProduct(e) {
         },
         body: JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await parseResponse(res);
     if (!res.ok) {
-        productMsg.textContent = data.message || 'No se pudo guardar el producto';
+        const validation = data.errors ? Object.values(data.errors).flat().join(' | ') : '';
+        productMsg.textContent = validation || data.message || 'No se pudo guardar el producto';
         return;
     }
 
@@ -719,7 +871,7 @@ async function fetchOrders() {
     const res = await fetch(`/api/v1/admin/orders${query}`, {
         headers: { 'Authorization': `Bearer ${token}` },
     });
-    const data = await res.json();
+    const data = await parseResponse(res);
     if (!res.ok) {
         renderDashboard([]);
         ordersList.innerHTML = '<div class="card">No se pudieron cargar pedidos.</div>';
@@ -796,7 +948,7 @@ async function fetchUsers() {
     const res = await fetch('/api/v1/admin/users', {
         headers: { 'Authorization': `Bearer ${token}` },
     });
-    const data = await res.json();
+    const data = await parseResponse(res);
     if (!res.ok) {
         usersList.innerHTML = '<div class="card">No se pudieron cargar usuarios.</div>';
         return;
@@ -851,7 +1003,7 @@ async function toggleUserActive(userId, isActive) {
         },
         body: JSON.stringify({ is_active: isActive }),
     });
-    const data = await res.json();
+    const data = await parseResponse(res);
     if (!res.ok) {
         statusMsg.textContent = data.message || 'No se pudo actualizar cuenta';
         return;
@@ -867,7 +1019,7 @@ async function deleteUser(userId) {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
     });
-    const data = await res.json();
+    const data = await parseResponse(res);
     if (!res.ok) {
         statusMsg.textContent = data.message || 'No se pudo eliminar usuario';
         return;
@@ -895,7 +1047,7 @@ async function updateOrderStatus(e) {
         },
         body: JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await parseResponse(res);
     if (!res.ok) {
         statusMsg.textContent = data.message || 'No se pudo actualizar estado';
         return;
@@ -924,7 +1076,7 @@ async function updatePaymentStatus(e) {
         },
         body: JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await parseResponse(res);
     if (!res.ok) {
         paymentMsg.textContent = data.message || 'No se pudo actualizar pago';
         return;
@@ -940,7 +1092,7 @@ async function deleteOrder(orderId) {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
     });
-    const data = await res.json();
+    const data = await parseResponse(res);
     if (!res.ok) {
         statusMsg.textContent = data.message || 'No se pudo eliminar pedido';
         return;
@@ -987,6 +1139,13 @@ async function boot() {
     await fetchOrders();
     await fetchUsers();
 
+    startAutoRefresh();
+}
+
+function startAutoRefresh() {
+    if (refreshTimer) clearInterval(refreshTimer);
+    const settings = getAdminSettings();
+    const everyMs = Math.max(10, Number(settings.refreshSeconds || 20)) * 1000;
     refreshTimer = setInterval(async () => {
         if (Date.now() > Number((parseSession() || {}).expiresAt || 0)) {
             clearAuth();
@@ -996,7 +1155,7 @@ async function boot() {
         await fetchProducts();
         await fetchOrders();
         await fetchUsers();
-    }, 20000);
+    }, everyMs);
 }
 
 cancelEditBtn.addEventListener('click', clearProductForm);
@@ -1012,6 +1171,7 @@ clearFiltersBtn.addEventListener('click', () => {
     fetchOrders();
 });
 exportCsvBtn.addEventListener('click', exportCsv);
+saveAdminSettingsBtn.addEventListener('click', saveAdminSettings);
 adminLogoutBtn.addEventListener('click', () => {
     clearAuth();
     window.location.href = '/admin/login';
@@ -1020,6 +1180,7 @@ adminLogoutBtn.addEventListener('click', () => {
     window.addEventListener(evt, touchAdminSession, { passive: true });
 });
 
+applyAdminSettingsToForm();
 boot();
 </script>
 </body>

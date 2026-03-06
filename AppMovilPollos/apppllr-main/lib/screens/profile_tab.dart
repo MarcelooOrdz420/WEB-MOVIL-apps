@@ -167,7 +167,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   ListTile(
                     leading: const Icon(Icons.history),
                     title: const Text('Historial de pedidos'),
-                    onTap: () => context.go('/app'),
+                    onTap: () => context.go('/app?tab=1'),
                   ),
                   const Divider(height: 1),
                   ListTile(

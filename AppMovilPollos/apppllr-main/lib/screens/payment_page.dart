@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../config/api_config.dart';
+import '../services/order_api_service.dart';
+import '../services/session_service.dart';
 import '../state/cart_controller.dart';
 
 enum PayMethod { yape, plin, transferencia, efectivo }
@@ -25,6 +27,22 @@ class _PaymentPageState extends State<PaymentPage> {
   PayMethod _method = PayMethod.yape;
   DeliveryType _deliveryType = DeliveryType.delivery;
   String _saladType = 'dulce';
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillUserData();
+  }
+
+  Future<void> _prefillUserData() async {
+    final session = SessionService();
+    final name = await session.getUserName();
+    final phone = await session.getUserPhone();
+    if (!mounted) return;
+    _nameCtrl.text = name == 'Invitado' ? '' : name;
+    _phoneCtrl.text = phone;
+  }
 
   @override
   void dispose() {
@@ -42,6 +60,97 @@ class _PaymentPageState extends State<PaymentPage> {
   String get _plinQr => ApiConfig.resolveUrl('/images/plin-qr.png');
 
   bool get _needsOperationCode => _method != PayMethod.efectivo;
+
+  String get _apiPaymentMethod {
+    switch (_method) {
+      case PayMethod.yape:
+        return 'yape';
+      case PayMethod.plin:
+        return 'plin';
+      case PayMethod.transferencia:
+        return 'transfer';
+      case PayMethod.efectivo:
+        return 'cod';
+    }
+  }
+
+  String get _apiDeliveryType => _deliveryType == DeliveryType.delivery ? 'delivery' : 'pickup';
+
+  Future<void> _submitOrder(CartController cart) async {
+    final customerName = _nameCtrl.text.trim();
+    final customerPhone = _phoneCtrl.text.trim();
+    final address = _addressCtrl.text.trim();
+    final reference = _referenceCtrl.text.trim();
+    final paymentReference = _operationCtrl.text.trim();
+    final drinkNote = '';
+
+    if (customerName.isEmpty || customerPhone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Completa nombre y telefono.')),
+      );
+      return;
+    }
+
+    if (_deliveryType == DeliveryType.delivery && address.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Direccion requerida para delivery.')),
+      );
+      return;
+    }
+
+    if (_needsOperationCode && paymentReference.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ingresa codigo de operacion para validar el pago.')),
+      );
+      return;
+    }
+
+    final hasChicken = cart.items.any((item) => item.producto.categoria.toLowerCase() == 'pollos');
+    if (hasChicken && _saladType.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona tipo de ensalada para pedidos de pollo.')),
+      );
+      return;
+    }
+
+    final lat = double.tryParse(_latitudeCtrl.text.trim());
+    final lng = double.tryParse(_longitudeCtrl.text.trim());
+    final items = cart.items
+        .map((item) => {
+              'product_id': item.producto.id,
+              'quantity': item.qty,
+            })
+        .toList();
+
+    setState(() => _submitting = true);
+    try {
+      final created = await OrderApiService().createOrder(
+        customerName: customerName,
+        customerPhone: customerPhone,
+        deliveryType: _apiDeliveryType,
+        paymentMethod: _apiPaymentMethod,
+        paymentReference: _needsOperationCode ? paymentReference : null,
+        saladType: hasChicken ? _saladType : null,
+        drinkNote: drinkNote.isEmpty ? null : drinkNote,
+        address: address.isEmpty ? null : address,
+        reference: reference.isEmpty ? null : reference,
+        latitude: lat,
+        longitude: lng,
+        items: items,
+      );
+
+      if (!mounted) return;
+      cart.clear();
+      context.go('/confirmacion', extra: created);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -172,11 +281,17 @@ class _PaymentPageState extends State<PaymentPage> {
                 backgroundColor: Colors.orange,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              onPressed: cart.items.isEmpty ? null : () => context.push('/confirmacion'),
-              child: const Text(
-                'Continuar con el pedido',
-                style: TextStyle(color: Colors.white),
-              ),
+              onPressed: (cart.items.isEmpty || _submitting) ? null : () => _submitOrder(cart),
+              child: _submitting
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text(
+                      'Confirmar pedido',
+                      style: TextStyle(color: Colors.white),
+                    ),
             ),
           ),
         ],

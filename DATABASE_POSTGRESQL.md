@@ -8,6 +8,9 @@ El proyecto queda preparado para usar PostgreSQL con Laravel en `backend/api`.
 - `backend/api/.env`: conexion real del backend.
 - `backend/api/database/migrations`: crea todas las tablas del sistema.
 - `backend/database/postgresql/create_database.sql`: script base para crear la base.
+- `backend/database/postgresql/schema_full_app_pollos_el_dorado.sql`: schema SQL completo.
+- `backend/database/postgresql/seed_minimal_app_pollos_el_dorado.sql`: datos iniciales (admin y productos).
+- `backend/database/postgresql/PORTABILIDAD_DB.md`: guia para mover la DB a otra PC.
 
 ## Configuracion esperada
 - `DB_CONNECTION=pgsql`

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -156,7 +157,18 @@ class OrderController extends Controller
             $total = 0;
 
             foreach ($data['items'] as $item) {
-                $product = Product::query()->where('is_available', true)->findOrFail($item['product_id']);
+                $product = Product::query()
+                    ->where('is_available', true)
+                    ->whereKey($item['product_id'])
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ((int) $product->stock < (int) $item['quantity']) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Stock insuficiente para {$product->name}. Disponible: {$product->stock}"],
+                    ]);
+                }
+
                 $lineTotal = $product->price * $item['quantity'];
 
                 OrderItem::create([
@@ -169,6 +181,7 @@ class OrderController extends Controller
                 ]);
 
                 $total += $lineTotal;
+                $product->decrement('stock', (int) $item['quantity']);
             }
 
             $order->update(['total_amount' => $total]);
@@ -325,16 +338,10 @@ class OrderController extends Controller
             'delivery_type' => $order->delivery_type,
             'payment_method' => $order->payment_method,
             'payment_status' => $order->payment_status,
-            'payment_reference' => $order->payment_reference,
-            'payment_proof_path' => $order->payment_proof_path,
             'payment_reported_at' => optional($order->payment_reported_at)?->toDateTimeString(),
             'payment_verified_at' => optional($order->payment_verified_at)?->toDateTimeString(),
             'salad_type' => $order->salad_type,
             'drink_note' => $order->drink_note,
-            'address' => $order->address,
-            'reference' => $order->reference,
-            'latitude' => $order->latitude,
-            'longitude' => $order->longitude,
             'items' => $order->items,
             'status_history' => $order->statusHistory,
         ]);

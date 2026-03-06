@@ -26,6 +26,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/orders/{order}/receipt', [OrderController::class, 'downloadReceipt']);
 
         Route::middleware('admin')->group(function (): void {
+            Route::get('/admin/products', [ProductController::class, 'adminIndex']);
             Route::post('/products', [ProductController::class, 'store']);
             Route::put('/products/{product}', [ProductController::class, 'update']);
             Route::delete('/products/{product}', [ProductController::class, 'destroy']);
